@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
     <meta charset="UTF-8">
     <title>kidmath</title>
     <style>
@@ -150,12 +154,13 @@ label {
             const type3_percentage = parseInt(document.getElementById('question-type3-percentage').value);
             const type4_percentage = parseInt(document.getElementById('question-type4-percentage').value);
 
+            const multiplication_table_only = document.getElementById('within-multiplication-table');
             const plus_min = parseInt(document.getElementById('plus-min-range').value);
             const plus_max = parseInt(document.getElementById('plus-max-range').value);
             const minus_min = plus_min;
             const minus_max = plus_max;
-            const times_min = parseInt(document.getElementById('times-min-range').value);
-            const times_max = parseInt(document.getElementById('times-max-range').value);
+            const times_min = multiplication_table_only ? 0: parseInt(document.getElementById('times-min-range').value);
+            const times_max = multiplication_table_only ? 10: parseInt(document.getElementById('times-max-range').value);
             const divide_min = times_min;
             const divide_max = times_max;
             check_boundary(plus_min, plus_max);
@@ -209,21 +214,26 @@ label {
                     }, validate_func: function(a, b) {
                         return (a + b) <= plus_max;
                     },
-                    min: plus_min, max: plus_max, show: '+', oper_tier: 0, id: 0})
+                    a_min: plus_min, a_max: plus_max, b_min: plus_min, b_max: plus_max, 
+                    show: '+', oper_tier: 0, id: 0})
             }
             if(enable_minus) {
                 oper_array.push({oper_func: function (a, b) {
                         return a - b;
                     }, validate_func: function(a, b) {
                         return enable_negative || (a >= b);
-                    }, min: minus_min, max: minus_max, show: '-', oper_tier: 0, id: 1})
+                    }, 
+                    a_min: minus_min, a_max: minus_max, b_min: minus_min, b_max: minus_max,
+                    show: '-', oper_tier: 0, id: 1})
             }
             if(enable_times) {
                 oper_array.push({oper_func: function (a, b) {
                         return a * b;
                     }, validate_func: function(a, b) {
                         return (Math.random() < 0.05 || (a > 1 && b > 1)) && (a * b) <= times_max;
-                    }, min: times_min, max: times_max, show: 'x', oper_tier: 1, id: 2})
+                    }, 
+                    a_min: times_min, a_max: times_max, b_min: times_min, b_max: times_max,
+                    show: 'x', oper_tier: 1, id: 2})
             }
             if(enable_divide) {
                 oper_array.push({oper_func: function (a, b) {
@@ -234,9 +244,14 @@ label {
                         let rand = Math.random();
                         return ((rand < 0.05 && b > 0) || b > 1) &&
                             ((rand > 0.95 && a >= b) || (a > b)) &&
-                            (((!disable_remainder) &&  enable_reminder && rand > 0.49 && rand < 0.51)|| a % b === 0);
+                            (((!disable_remainder) &&  enable_reminder && rand > 0.49 && rand < 0.51)|| a % b === 0) && 
+                            (!multiplication_table_only || a / b <= 9);
                     },
-                    min: divide_min, max: divide_max, show: '÷', oper_tier: 1, id: 3})
+                    a_min: multiplication_table_only ? 0: divide_min, 
+                    a_max: multiplication_table_only ? 90: divide_max,
+                    b_min: multiplication_table_only ? 1: divide_min, 
+                    b_max: multiplication_table_only ? 10: divide_max,
+                    show: '÷', oper_tier: 1, id: 3})
             }
             if(oper_array.length === 0) {
                 alert("please enable at least 1 operation");
@@ -248,7 +263,7 @@ label {
             width_string = 100 / output_columns + "%";
             height_string = 880 / (num_questions / output_columns) + "px";
             for(let i = 0; i < num_questions; i++) {
-                one_question = generate_one_question(generate_func_array, oper_array, enable_negative);
+                one_question = generate_one_question(generate_func_array, oper_array);
                 if(i % output_columns === 0) {
                     result_html += "<div style=\"height:" + height_string +"\">";
                 }
@@ -274,15 +289,15 @@ label {
             }
         }
 
-        function generate_one_question(generate_func_array, oper_array, enable_negative) {
+        function generate_one_question(generate_func_array, oper_array) {
             const rand = Math.random();
             for(let i = 0; i < generate_func_array.length; i++) {
                 let genfunc = generate_func_array[i];
                 if(genfunc.rand_threshold >= rand)
-                     return genfunc.gen_func(oper_array, enable_negative);
+                     return genfunc.gen_func(oper_array);
             }
             // for very corner case, return the last type
-            return generate_func_array[generate_func_array.length - 1].gen_func(oper_array, enable_negative);
+            return generate_func_array[generate_func_array.length - 1].gen_func(oper_array);
         }
 
         function chose_1_oper(oper_array) {
@@ -299,10 +314,10 @@ label {
             let b = input_b;
             while(true) {
                 if (input_a === undefined) {
-                    a = generate_random(oper_chosen.min, oper_chosen.max);
+                    a = generate_random(oper_chosen.a_min, oper_chosen.a_max);
                 }
                 if (input_b === undefined) {
-                    b = generate_random(oper_chosen.min, oper_chosen.max);
+                    b = generate_random(oper_chosen.b_min, oper_chosen.b_max);
                 }
                 if(oper_chosen.validate_func(a, b, disable_remainder)) {
                     break;
@@ -332,7 +347,7 @@ label {
                 if(first_oper.oper_tier < second_oper.oper_tier) {
                     paren_pos = 1;
                 }
-                console.log("1:", first_oper.oper_tier, first_oper.id, second_oper.oper_tier, second_oper.id);
+                //console.log("1:", first_oper.oper_tier, first_oper.id, second_oper.oper_tier, second_oper.id);
                 return {
                     a: first_oper.a, b: first_oper.b, c: second_oper.b, d: second_oper.c,
                     oper1: first_oper.oper, oper2: second_oper.oper, paren_pos: paren_pos
@@ -348,11 +363,20 @@ label {
                 }
                 let paren_pos = -1;
                 if(first_oper.oper_tier < second_oper.oper_tier ||
-                    (first_oper.id === second_oper.id
-                        && (first_oper.id === 1 || first_oper.id === 3 ))) {
+                    second_oper.id == 3 ||
+                    (second_oper.id == 1 && first_oper.id <= second_oper.id)) {
+                    /**
+                    4 * (3 + 2)
+                    4 * (3 - 2)
+                    4 / (3 * 2)
+                    4 / (3 / 2)
+                    4 / (3 - 2)
+                    4 - (3 - 2)
+                    4 - (3 + 2)
+                    **/
                     paren_pos = 2;
                 }
-                console.log("2:", first_oper.oper_tier, first_oper.id, second_oper.oper_tier, second_oper.id);
+                //console.log("2:", first_oper.oper_tier, first_oper.id, second_oper.oper_tier, second_oper.id);
                 return {
                     a: second_oper.a, b: first_oper.a, c: first_oper.b, d: second_oper.c,
                     oper1: second_oper.oper, oper2: first_oper.oper, paren_pos: paren_pos
@@ -426,6 +450,17 @@ label {
                 result_str += ")";
             }
             return result_str + "=" + equation.d;
+        }
+
+        function onchange_times_range() {
+            const ckbox = document.getElementById('within-multiplication-table');
+            if(ckbox.checked) {
+                document.getElementById('times-min-range').disabled = true;
+                document.getElementById('times-max-range').disabled = true;
+            } else {
+                document.getElementById('times-min-range').disabled = false;
+                document.getElementById('times-max-range').disabled = false;
+            }
         }
 
         function printDiv(divName) {
@@ -514,9 +549,13 @@ label {
                         </label>
                         <label class="control-inline">
                             <span>乘除：</span>
-                            <input class="input-range" type="text" id="times-min-range" value="0" />
+                            <input class="input-range" type="text" id="times-min-range" value="0" disabled/>
                             <span>-</span>
-                            <input class="input-range" type="text" id="times-max-range" value="100" />
+                            <input class="input-range" type="text" id="times-max-range" value="100" disabled/>
+                        </label>
+                        <label class="control-inline">
+                            <input type="checkbox" id="within-multiplication-table" value="1" checked onclick="onchange_times_range()"/>
+                            <span>乘法口诀范围</span>
                         </label>
                         <label class="control-inline">
                             <input type="checkbox" id="enable-negative" value="1" />
