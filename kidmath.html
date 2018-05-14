@@ -133,7 +133,7 @@ label {
 }
     </style>
     <script>
-        const blank = "(&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp)";
+        const blank = " _____ ";
         function start_generate() {
             const enable_plus = document.getElementById('plus-enabled').checked;
             const enable_minus = document.getElementById('minus-enabled').checked;
@@ -209,33 +209,34 @@ label {
                     }, validate_func: function(a, b) {
                         return (a + b) <= plus_max;
                     },
-                    min: plus_min, max: plus_max, show: '+'})
+                    min: plus_min, max: plus_max, show: '+', oper_tier: 0, id: 0})
             }
             if(enable_minus) {
                 oper_array.push({oper_func: function (a, b) {
                         return a - b;
                     }, validate_func: function(a, b) {
                         return enable_negative || (a >= b);
-                    }, min: minus_min, max: minus_max, show: '-'})
+                    }, min: minus_min, max: minus_max, show: '-', oper_tier: 0, id: 1})
             }
             if(enable_times) {
                 oper_array.push({oper_func: function (a, b) {
                         return a * b;
                     }, validate_func: function(a, b) {
                         return (Math.random() < 0.05 || (a > 1 && b > 1)) && (a * b) <= times_max;
-                    }, min: times_min, max: times_max, show: 'x'})
+                    }, min: times_min, max: times_max, show: 'x', oper_tier: 1, id: 2})
             }
             if(enable_divide) {
                 oper_array.push({oper_func: function (a, b) {
                         if(a % b === 0) return a / b;
                         else
                             return Math.floor(a / b) + "..." + a % b;
-                    }, validate_func: function(a, b) {
+                    }, validate_func: function(a, b, disable_remainder = false) {
                         let rand = Math.random();
                         return ((rand < 0.05 && b > 0) || b > 1) &&
                             ((rand > 0.95 && a >= b) || (a > b)) &&
-                            ((enable_reminder && rand > 0.49 && rand < 0.51)|| a % b === 0);
-                    }, min: divide_min, max: divide_max, show: '÷'})
+                            (((!disable_remainder) &&  enable_reminder && rand > 0.49 && rand < 0.51)|| a % b === 0);
+                    },
+                    min: divide_min, max: divide_max, show: '÷', oper_tier: 1, id: 3})
             }
             if(oper_array.length === 0) {
                 alert("please enable at least 1 operation");
@@ -274,7 +275,6 @@ label {
         }
 
         function generate_one_question(generate_func_array, oper_array, enable_negative) {
-
             const rand = Math.random();
             for(let i = 0; i < generate_func_array.length; i++) {
                 let genfunc = generate_func_array[i];
@@ -293,19 +293,71 @@ label {
             return Math.floor(Math.random() * (max_value - min_value) + min_value);
         }
 
-        function generate_1_oper(oper_array) {
+        function generate_1_oper(oper_array, input_a, input_b, disable_remainder = false, one_time = false) {
             let oper_chosen = chose_1_oper(oper_array);
-            let a;
-            let b;
+            let a = input_a;
+            let b = input_b;
             while(true) {
-                a = generate_random(oper_chosen.min, oper_chosen.max);
-                b = generate_random(oper_chosen.min, oper_chosen.max);
-                if(oper_chosen.validate_func(a, b)) {
+                if (input_a === undefined) {
+                    a = generate_random(oper_chosen.min, oper_chosen.max);
+                }
+                if (input_b === undefined) {
+                    b = generate_random(oper_chosen.min, oper_chosen.max);
+                }
+                if(oper_chosen.validate_func(a, b, disable_remainder)) {
                     break;
+                }
+                // only run for one time
+                if(one_time) {
+                    return;
                 }
             }
             let c = oper_chosen.oper_func(a, b);
-            return {a: a, b: b, c: c, oper: oper_chosen.show};
+            return {a: a, b: b, c: c, oper: oper_chosen.show, oper_tier: oper_chosen.oper_tier, id: oper_chosen.id};
+        }
+
+        function generate_2_oper(oper_array) {
+            let first_oper;
+            let second_oper;
+            if(Math.random() < 0.5) {
+                // type1, (a oper b) oper c
+                //           ^^^^    ^^^^
+                //           oper1   oper2
+                while (true) {
+                    first_oper = generate_1_oper(oper_array, undefined, undefined, true);
+                    second_oper = generate_1_oper(oper_array, first_oper.c, undefined, false, true);
+                    if(second_oper !== undefined) break;
+                }
+                let paren_pos = -1;
+                if(first_oper.oper_tier < second_oper.oper_tier) {
+                    paren_pos = 1;
+                }
+                console.log("1:", first_oper.oper_tier, first_oper.id, second_oper.oper_tier, second_oper.id);
+                return {
+                    a: first_oper.a, b: first_oper.b, c: second_oper.b, d: second_oper.c,
+                    oper1: first_oper.oper, oper2: second_oper.oper, paren_pos: paren_pos
+                };
+            } else {
+                // type2, a oper (b oper c)
+                //          ^^^^    ^^^^
+                //          oper2   oper1
+                while (true) {
+                    first_oper = generate_1_oper(oper_array, undefined, undefined, true);
+                    second_oper = generate_1_oper(oper_array, undefined, first_oper.c, false, true);
+                    if(second_oper !== undefined) break;
+                }
+                let paren_pos = -1;
+                if(first_oper.oper_tier < second_oper.oper_tier ||
+                    (first_oper.id === second_oper.id
+                        && (first_oper.id === 1 || first_oper.id === 3 ))) {
+                    paren_pos = 2;
+                }
+                console.log("2:", first_oper.oper_tier, first_oper.id, second_oper.oper_tier, second_oper.id);
+                return {
+                    a: second_oper.a, b: first_oper.a, c: first_oper.b, d: second_oper.c,
+                    oper1: second_oper.oper, oper2: first_oper.oper, paren_pos: paren_pos
+                }
+            }
         }
 
         function generate_type_1(oper_array) {
@@ -324,14 +376,56 @@ label {
         }
 
         function generate_type_3(oper_array) {
-            let equation1 = generate_1_oper(oper_array);
-            return "type3";
-
+            let equation = generate_2_oper(oper_array);
+            let result_str = "";
+            if(equation.paren_pos === 1) {
+                result_str += "(";
+            }
+            result_str += equation.a + equation.oper1;
+            if(equation.paren_pos === 2) {
+                result_str += "(";
+            }
+            result_str += equation.b;
+            if(equation.paren_pos === 1) {
+                result_str += ")";
+            }
+            result_str += equation.oper2 + equation.c;
+            if(equation.paren_pos === 2) {
+                result_str += ")";
+            }
+            return result_str + "=" + blank;
         }
 
         function generate_type_4(oper_array) {
-            return "type4";
-
+            let equation = generate_2_oper(oper_array);
+            let result_str = "";
+            let rand = Math.random();
+            if(equation.paren_pos === 1) {
+                result_str += "(";
+            }
+            let a = equation.a;
+            let b = equation.b;
+            let c = equation.c;
+            if(rand < 1/3) {
+                a = blank;
+            } else if(rand < 2/3) {
+                b = blank;
+            } else {
+                c = blank;
+            }
+            result_str += a + equation.oper1;
+            if(equation.paren_pos === 2) {
+                result_str += "(";
+            }
+            result_str += b;
+            if(equation.paren_pos === 1) {
+                result_str += ")";
+            }
+            result_str += equation.oper2 + c;
+            if(equation.paren_pos === 2) {
+                result_str += ")";
+            }
+            return result_str + "=" + equation.d;
         }
 
         function printDiv(divName) {
