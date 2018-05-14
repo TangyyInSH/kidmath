@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>kidmath</title>
+    <style>
+.main-content {
+    padding-bottom: 30px;
+}
+
+.widget {
+    border-width: 1px;
+    border-style: solid;
+    margin-bottom: 20px;
+    background-color: #f9f9f9;
+    border-color: lightgray;
+}
+.widget .widget-header {
+    padding: 0 10px;
+    height: 35px;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: lightgray;
+    background-color: #eeeeee;
+}
+div {
+    display: block;
+}
+body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    color: #555;
+    background: #ececec;
+    line-height: 1.42857143;
+}
+* {
+    box-sizing: border-box;
+}
+.widget .widget-header h3 {
+    display: inline-block;
+    vertical-align: middle;
+    font-family: "latobold";
+    font-size: 1.1em;
+    margin: 0;
+    line-height: 35px;
+    float: left;
+}
+.widget .widget-content {
+    padding: 20px 10px;
+}
+.form-horizontal .form-group {
+    margin-right: -15px;
+    margin-left: -15px;
+}
+.form-group {
+    margin-bottom: 15px;
+}
+.note-editor .col-xs-1, .col-sm-1, .col-md-1, .col-lg-1, .col-xs-2, .col-sm-2, .col-md-2, .col-lg-2, .col-xs-3, .col-sm-3, .col-md-3, .col-lg-3, .col-xs-4, .col-sm-4, .col-md-4, .col-lg-4, .col-xs-5, .col-sm-5, .col-md-5, .col-lg-5, .col-xs-6, .col-sm-6, .col-md-6, .col-lg-6, .col-xs-7, .col-sm-7, .col-md-7, .col-lg-7, .col-xs-8, .col-sm-8, .col-md-8, .col-lg-8, .col-xs-9, .col-sm-9, .col-md-9, .col-lg-9, .col-xs-10, .col-sm-10, .col-md-10, .col-lg-10, .col-xs-11, .col-sm-11, .col-md-11, .col-lg-11, .col-xs-12, .col-sm-12, .col-md-12, .col-lg-12 {
+    position: relative;
+    min-height: 1px;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+.note-editor .col-md-1, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9, .col-md-10, .col-md-11 {
+    float: left;
+}
+.btn-group-vertical>.btn-group:after, .btn-group-vertical>.btn-group:before, .btn-toolbar:after, .btn-toolbar:before, .clearfix:after, .clearfix:before, .container-fluid:after, .container-fluid:before, .container:after, .container:before, .dl-horizontal dd:after, .dl-horizontal dd:before, .form-horizontal .form-group:after, .form-horizontal .form-group:before, .modal-footer:after, .modal-footer:before, .nav:after, .nav:before, .navbar-collapse:after, .navbar-collapse:before, .navbar-header:after, .navbar-header:before, .navbar:after, .navbar:before, .pager:after, .pager:before, .panel-body:after, .panel-body:before, .row:after, .row:before {
+    display: table;
+    content: " ";
+}
+.btn-group-vertical>.btn-group:after, .btn-toolbar:after, .clearfix:after, .container-fluid:after, .container:after, .dl-horizontal dd:after, .form-horizontal .form-group:after, .modal-footer:after, .nav:after, .navbar-collapse:after, .navbar-header:after, .navbar:after, .pager:after, .panel-body:after, .row:after {
+    clear: both;
+}
+.col-md-2 {
+    width: 16.66666667%;
+}
+label {
+    font-weight: 300;
+    display: inline-block;
+    max-width: 100%;
+    margin-bottom: 5px;
+}
+.control-inline {
+    display: inline-block !important;
+    vertical-align: middle !important;
+    zoom: 1 !important;
+    margin-right: 10px;
+}
+.input-percentage {
+    width: 20px;
+}
+.input-range {
+    width: 40px;
+}
+.ui.secondary.button, .ui.secondary.buttons .button {
+    background-color: #00b5ad;
+    color: #fff;
+    text-shadow: none;
+    background-image: none;
+}
+.ui.button {
+    cursor: pointer;
+    display: inline-block;
+    min-height: 1em;
+    outline: 0;
+    border: none;
+    vertical-align: baseline;
+    background: #e0e1e2 none;
+    font-family: Lato,'Helvetica Neue',Arial,Helvetica,sans-serif;
+    margin: 0 .25em 0 0;
+    padding: .78571429em 1.5em .78571429em;
+    text-transform: none;
+    font-weight: 700;
+    line-height: 1em;
+    font-style: normal;
+    text-align: center;
+    text-decoration: none;
+    border-radius: .28571429rem;
+}
+.result {
+    font-size: 14px;
+    margin-top: 20px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+.result-title {
+    text-align: center;
+}
+
+.result-sheet {
+    text-align: left;
+    width:100%;
+}
+    </style>
+    <script>
+        const blank = "(&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp)";
+        function start_generate() {
+            const enable_plus = document.getElementById('plus-enabled').checked;
+            const enable_minus = document.getElementById('minus-enabled').checked;
+            const enable_times = document.getElementById('times-enabled').checked;
+            const enable_divide = document.getElementById('divide-enabled').checked;
+
+            const enable_type1 = document.getElementById('question-type1-enabled').checked;
+            const enable_type2 = document.getElementById('question-type2-enabled').checked;
+            const enable_type3 = document.getElementById('question-type3-enabled').checked;
+            const enable_type4 = document.getElementById('question-type3-enabled').checked;
+
+            const type1_percentage = parseInt(document.getElementById('question-type1-percentage').value);
+            const type2_percentage = parseInt(document.getElementById('question-type2-percentage').value);
+            const type3_percentage = parseInt(document.getElementById('question-type3-percentage').value);
+            const type4_percentage = parseInt(document.getElementById('question-type4-percentage').value);
+
+            const plus_min = parseInt(document.getElementById('plus-min-range').value);
+            const plus_max = parseInt(document.getElementById('plus-max-range').value);
+            const minus_min = plus_min;
+            const minus_max = plus_max;
+            const times_min = parseInt(document.getElementById('times-min-range').value);
+            const times_max = parseInt(document.getElementById('times-max-range').value);
+            const divide_min = times_min;
+            const divide_max = times_max;
+            check_boundary(plus_min, plus_max);
+            check_boundary(times_min, times_max);
+
+            const enable_negative = document.getElementById('enable-negative').checked;
+            const enable_reminder = document.getElementById('enable-reminder').checked;
+
+            const num_questions = parseInt(document.getElementById('total-num').value);
+            const output_columns = parseInt(document.getElementById('output-cols').value);
+
+            const all_available_func = [generate_type_1, generate_type_2, generate_type_3, generate_type_4];
+            const type_enable_array = [enable_type1, enable_type2, enable_type3, enable_type4];
+            const percentage_array = [type1_percentage, type2_percentage, type3_percentage, type4_percentage];
+            let enabled_func = [];
+            let func_percentage = [];
+            let generate_func_array = [];
+
+            percentage_array.forEach(function check(percentage) {
+                if(percentage < 0) {
+                    alert("percentage must be at least 0");
+                    throw RangeError("percentage negative");
+                }
+            });
+
+            let total_percentage_value = 0;
+            for(let i = 0; i < all_available_func.length; i++) {
+                if(type_enable_array[i]) {
+                    enabled_func.push(all_available_func[i]);
+                    func_percentage.push(percentage_array[i]);
+                    total_percentage_value += percentage_array[i];
+                }
+            }
+            if(enabled_func.length === 0 || total_percentage_value <= 0) {
+                alert("please enable at least 1 question type");
+                throw RangeError("please enable at least 1 question type");
+            }
+
+            for(let i = 0 ; i < percentage_array.length; i++) {
+               percentage_array[i] /= total_percentage_value;
+               if(i > 0) {
+                   percentage_array[i] += percentage_array[i - 1];
+               }
+               generate_func_array.push({gen_func: enabled_func[i], rand_threshold: percentage_array[i]});
+            }
+
+            let oper_array = [];
+            if(enable_plus) {
+                oper_array.push({oper_func: function (a, b) {
+                        return a + b;
+                    }, validate_func: function(a, b) {
+                        return (a + b) <= plus_max;
+                    },
+                    min: plus_min, max: plus_max, show: '+'})
+            }
+            if(enable_minus) {
+                oper_array.push({oper_func: function (a, b) {
+                        return a - b;
+                    }, validate_func: function(a, b) {
+                        return enable_negative || (a >= b);
+                    }, min: minus_min, max: minus_max, show: '-'})
+            }
+            if(enable_times) {
+                oper_array.push({oper_func: function (a, b) {
+                        return a * b;
+                    }, validate_func: function(a, b) {
+                        return (Math.random() < 0.05 || (a > 1 && b > 1)) && (a * b) <= times_max;
+                    }, min: times_min, max: times_max, show: 'x'})
+            }
+            if(enable_divide) {
+                oper_array.push({oper_func: function (a, b) {
+                        if(a % b === 0) return a / b;
+                        else
+                            return Math.floor(a / b) + "..." + a % b;
+                    }, validate_func: function(a, b) {
+                        let rand = Math.random();
+                        return ((rand < 0.05 && b > 0) || b > 1) &&
+                            ((rand > 0.95 && a >= b) || (a > b)) &&
+                            ((enable_reminder && rand > 0.49 && rand < 0.51)|| a % b === 0);
+                    }, min: divide_min, max: divide_max, show: '÷'})
+            }
+            if(oper_array.length === 0) {
+                alert("please enable at least 1 operation");
+                throw RangeError("please enable at least 1 operation type");
+            }
+
+            document.getElementById('result').style = "visibility: visible";
+            result_html = "";
+            width_string = 100 / output_columns + "%";
+            height_string = 880 / (num_questions / output_columns) + "px";
+            for(let i = 0; i < num_questions; i++) {
+                one_question = generate_one_question(generate_func_array, oper_array, enable_negative);
+                if(i % output_columns === 0) {
+                    result_html += "<div style=\"height:" + height_string +"\">";
+                }
+                result_html += "<label style=\"width:" + width_string + "\">";
+                result_html += one_question;
+                result_html += "</label>";
+                if((i + 1) % output_columns === 0) {
+                    result_html += "</div>";
+                }
+            }
+            if(num_questions % output_columns !== 0) {
+                result_html += "</div>";
+            }
+
+            document.getElementById('result_text').innerHTML = result_html;
+            document.getElementById('num_questions').innerHTML = num_questions;
+        }
+
+        function check_boundary(minvalue, maxvalue) {
+            if(minvalue >= maxvalue) {
+                alert("error, min value must less than max value");
+                throw RangeError("min value is greater than or equal to max value");
+            }
+        }
+
+        function generate_one_question(generate_func_array, oper_array, enable_negative) {
+
+            const rand = Math.random();
+            for(let i = 0; i < generate_func_array.length; i++) {
+                let genfunc = generate_func_array[i];
+                if(genfunc.rand_threshold >= rand)
+                     return genfunc.gen_func(oper_array, enable_negative);
+            }
+            // for very corner case, return the last type
+            return generate_func_array[generate_func_array.length - 1].gen_func(oper_array, enable_negative);
+        }
+
+        function chose_1_oper(oper_array) {
+            return oper_array[Math.floor(Math.random() * oper_array.length)];
+        }
+
+        function generate_random(min_value, max_value) {
+            return Math.floor(Math.random() * (max_value - min_value) + min_value);
+        }
+
+        function generate_1_oper(oper_array) {
+            let oper_chosen = chose_1_oper(oper_array);
+            let a;
+            let b;
+            while(true) {
+                a = generate_random(oper_chosen.min, oper_chosen.max);
+                b = generate_random(oper_chosen.min, oper_chosen.max);
+                if(oper_chosen.validate_func(a, b)) {
+                    break;
+                }
+            }
+            let c = oper_chosen.oper_func(a, b);
+            return {a: a, b: b, c: c, oper: oper_chosen.show};
+        }
+
+        function generate_type_1(oper_array) {
+            let equation = generate_1_oper(oper_array);
+            return equation.a + equation.oper + equation.b + "=" + blank;
+        }
+
+        function generate_type_2(oper_array) {
+            let equation = generate_1_oper(oper_array);
+            if(Math.random() < 0.5) {
+                return blank + equation.oper + equation.b + "=" + equation.c;
+            } else {
+                return equation.a + equation.oper + blank + "=" + equation.c;
+            }
+
+        }
+
+        function generate_type_3(oper_array) {
+            let equation1 = generate_1_oper(oper_array);
+            return "type3";
+
+        }
+
+        function generate_type_4(oper_array) {
+            return "type4";
+
+        }
+
+        function printDiv(divName) {
+            const printContents = document.getElementById(divName).innerHTML;
+            const originalContents = document.body.innerHTML;
+
+            document.body.innerHTML = printContents;
+
+            window.print();
+
+            document.body.innerHTML = originalContents;
+        }
+    </script>
+</head>
+<body>
+
+<h2>四则运算出题系统</h2>
+<div class="main-content">
+    <div class="widget">
+        <div class="widget-header">
+            <h3>
+                设置参数
+            </h3>
+        </div>
+
+        <div class="widget-content">
+            <div class="form-horizontal">
+                <div class="form-group">
+                    <label class="col-md-2">运算符号</label>
+                    <div class="col-md-10">
+                        <label class="control-inline">
+                            <input type="checkbox" id="plus-enabled" value="1" checked/>
+                            <span>加</span>
+                        </label>
+                        <label class="control-inline">
+                            <input type="checkbox" id="minus-enabled" value="1" checked/>
+                            <span>减</span>
+                        </label>
+                        <label class="control-inline">
+                            <input type="checkbox" id="times-enabled" value="1" checked/>
+                            <span>乘</span>
+                        </label>
+                        <label class="control-inline">
+                            <input type="checkbox" id="divide-enabled" value="1" checked/>
+                            <span>除</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-2">题目形式</label>
+                    <div class="col-md-10">
+                        <label class="control-inline">
+                            <input type="checkbox" id="question-type1-enabled" value="1" checked/>
+                            <span>a+b=()  占比</span>
+                            <input class="input-percentage" type="text" id="question-type1-percentage" value="25"/>
+                            <span>%</span>
+                        </label>
+                        <label class="control-inline">
+                            <input type="checkbox" id="question-type2-enabled" value="1" checked/>
+                            <span>a+()=b  占比</span>
+                            <input class="input-percentage" type="text" id="question-type2-percentage" value="25"/>
+                            <span>%</span>
+                        </label>
+                        <label class="control-inline">
+                            <input type="checkbox" id="question-type3-enabled" value="1" checked/>
+                            <span>a+b*c=()  占比</span>
+                            <input class="input-percentage" type="text" id="question-type3-percentage" value="25"/>
+                            <span>%</span>
+                        </label>
+                        <label class="control-inline">
+                            <input type="checkbox" id="question-type4-enabled" value="1" checked/>
+                            <span>a+()*b=c  占比</span>
+                            <input class="input-percentage" type="text" id="question-type4-percentage" value="25"/>
+                            <span>%</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-2">数字范围</label>
+                    <div class="col-md-10">
+                        <label class="control-inline">
+                            <span>加减：</span>
+                            <input class="input-range" type="text" id="plus-min-range" value="0" />
+                            <span>-</span>
+                            <input class="input-range" type="text" id="plus-max-range" value="1000" />
+                        </label>
+                        <label class="control-inline">
+                            <span>乘除：</span>
+                            <input class="input-range" type="text" id="times-min-range" value="0" />
+                            <span>-</span>
+                            <input class="input-range" type="text" id="times-max-range" value="100" />
+                        </label>
+                        <label class="control-inline">
+                            <input type="checkbox" id="enable-negative" value="1" />
+                            <span>允许负数</span>
+                        </label>
+                        <label class="control-inline">
+                            <input type="checkbox" id="enable-reminder" value="1" checked/>
+                            <span>允许余数</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-2">
+                        其它设置
+                    </label>
+                    <div class="col-md-10">
+                        <label class="control-inline">
+                            <span>总题量：</span>
+                            <input class="input-range" type="text" id="total-num" value="80" />
+                            <span>题</span>
+                        </label>
+                        <label class="control-inline">
+                            <span>输出列数：</span>
+                            <input class="input-percentage" type="text" id="output-cols" value="4" />
+                            <span>列</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<button id="btn_start" class="ui secondary button" onclick="start_generate()">开始出题</button>
+<div class="result" id="result" style="visibility: hidden">
+    <div id="question-sheet" class="question-sheet">
+        <h1 class="result-title">数学运算练习题</h1>
+        <div style="text-align:right;margin-bottom: 20px">
+            <span>题目数：</span>
+            <label id="num_questions"> </label>
+            <span>题</span>
+            <span style="margin-left:20px">日期：______年____月____日</span>
+            <span style="margin-left:20px">用时：________</span>
+            <span style="margin-left:20px">得分：________</span>
+        </div>
+        <div id="result_text" class="result-sheet">orignal text</div>
+    </div>
+    <button id="btn_print" class="ui secondary button" onclick="printDiv('question-sheet')">打印</button>
+</div>
+</body>
+</html>
