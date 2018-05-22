@@ -135,8 +135,15 @@ label {
     text-align: left;
     width:100%;
 }
+
+
+@page { margin: 0; }
+@media print {
+  @page { margin: 0; }
+  body { margin: 1.6cm; }
+}
     </style>
-    <script>
+    <script type="text/javascript">
         const blank = " _____ ";
         function start_generate() {
             const enable_plus = document.getElementById('plus-enabled').checked;
@@ -154,7 +161,7 @@ label {
             const type3_percentage = parseInt(document.getElementById('question-type3-percentage').value);
             const type4_percentage = parseInt(document.getElementById('question-type4-percentage').value);
 
-            const multiplication_table_only = document.getElementById('within-multiplication-table');
+            const multiplication_table_only = document.getElementById('within-multiplication-table').checked;
             const plus_min = parseInt(document.getElementById('plus-min-range').value);
             const plus_max = parseInt(document.getElementById('plus-max-range').value);
             const minus_min = plus_min;
@@ -221,7 +228,7 @@ label {
                 oper_array.push({oper_func: function (a, b) {
                         return a - b;
                     }, validate_func: function(a, b) {
-                        return enable_negative || (a >= b);
+                        return (enable_negative || (a >= b)) && (a >= minus_min && a <= minus_max && b >= minus_min && b <= minus_max);
                     }, 
                     a_min: minus_min, a_max: minus_max, b_min: minus_min, b_max: minus_max,
                     show: '-', oper_tier: 0, id: 1})
@@ -230,17 +237,21 @@ label {
                 oper_array.push({oper_func: function (a, b) {
                         return a * b;
                     }, validate_func: function(a, b) {
-                        return (Math.random() < 0.05 || (a > 1 && b > 1)) && (a * b) <= times_max;
+                        return (Math.random() < 0.05 || (a > 1 && b > 1)) && 
+                            (a >= times_min && a <= times_max && b >= times_min && b <= times_max)/*&& (a * b) <= times_max*/;
                     }, 
                     a_min: times_min, a_max: times_max, b_min: times_min, b_max: times_max,
-                    show: 'x', oper_tier: 1, id: 2})
+                    show: '×', oper_tier: 1, id: 2})
             }
             if(enable_divide) {
                 oper_array.push({oper_func: function (a, b) {
                         if(a % b === 0) return a / b;
                         else
                             return Math.floor(a / b) + "..." + a % b;
-                    }, validate_func: function(a, b, disable_remainder = false) {
+                    }, validate_func: function(a, b, disable_remainder) {
+                        if(disable_remainder === undefined) {
+                            disable_remainder = false;
+                        }
                         let rand = Math.random();
                         return ((rand < 0.05 && b > 0) || b > 1) &&
                             ((rand > 0.95 && a >= b) || (a > b)) &&
@@ -258,10 +269,10 @@ label {
                 throw RangeError("please enable at least 1 operation type");
             }
 
-            document.getElementById('result').style = "visibility: visible";
+            document.getElementById('result').style.visibility = "visible";
             result_html = "";
             width_string = 100 / output_columns + "%";
-            height_string = 880 / (num_questions / output_columns) + "px";
+            height_string = 840 / (num_questions / output_columns) + "px";
             for(let i = 0; i < num_questions; i++) {
                 one_question = generate_one_question(generate_func_array, oper_array);
                 if(i % output_columns === 0) {
@@ -308,7 +319,9 @@ label {
             return Math.floor(Math.random() * (max_value - min_value) + min_value);
         }
 
-        function generate_1_oper(oper_array, input_a, input_b, disable_remainder = false, one_time = false) {
+        function generate_1_oper(oper_array, input_a, input_b, disable_remainder, one_time) {
+            if(disable_remainder === undefined) disable_remainder = false;
+            if(one_time === undefined) one_time = false;
             let oper_chosen = chose_1_oper(oper_array);
             let a = input_a;
             let b = input_b;
