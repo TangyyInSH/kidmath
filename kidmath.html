@@ -271,25 +271,39 @@ label {
 
             document.getElementById('result').style.visibility = "visible";
             result_html = "";
+            answer_html = "";
             width_string = 100 / output_columns + "%";
             height_string = 840 / (num_questions / output_columns) + "px";
-            for(let i = 0; i < num_questions; i++) {
-                one_question = generate_one_question(generate_func_array, oper_array);
-                if(i % output_columns === 0) {
-                    result_html += "<div style=\"height:" + height_string +"\">";
+            let total_operators = 0;
+            
+            function format_question(qtext, col_index) {
+                let result_question_html = "";
+                if(col_index % output_columns === 0) {
+                    result_question_html += "<div style=\"height:" + height_string +"\">";
                 }
-                result_html += "<label style=\"width:" + width_string + "\">";
-                result_html += one_question;
-                result_html += "</label>";
-                if((i + 1) % output_columns === 0) {
-                    result_html += "</div>";
+                result_question_html += "<label style=\"width:" + width_string + "\">";
+                result_question_html += qtext;
+                result_question_html += "</label>";
+                if((col_index + 1) % output_columns === 0) {
+                    result_question_html += "</div>";
                 }
-            }
-            if(num_questions % output_columns !== 0) {
-                result_html += "</div>";
+                return result_question_html;
             }
 
+            for(let i = 0; i < num_questions; i++) {
+                one_question = generate_one_question(generate_func_array, oper_array);
+                total_operators += one_question.num_oper;
+                result_html += format_question(one_question.question, i);
+                answer_html += format_question(one_question.answer, i);
+           }
+            if(num_questions % output_columns !== 0) {
+                result_html += "</div>";
+                answer_html += "</div>";
+            }
+            
+            document.getElementById('num_operators').innerHTML = total_operators;
             document.getElementById('result_text').innerHTML = result_html;
+            document.getElementById('answer_text').innerHTML = answer_html;
             document.getElementById('num_questions').innerHTML = num_questions;
         }
 
@@ -399,15 +413,27 @@ label {
 
         function generate_type_1(oper_array) {
             let equation = generate_1_oper(oper_array);
-            return equation.a + equation.oper + equation.b + "=" + blank;
+            return {
+                question: equation.a + equation.oper + equation.b + "=" + blank,
+                answer: equation.a + equation.oper + equation.b + "=<u>" + equation.c + "</u>",
+                num_oper: 1
+            };
         }
 
         function generate_type_2(oper_array) {
             let equation = generate_1_oper(oper_array);
             if(Math.random() < 0.5) {
-                return blank + equation.oper + equation.b + "=" + equation.c;
+                return {
+                    question: blank + equation.oper + equation.b + "=" + equation.c,
+                    answer: "<u>" + equation.a + "</u>" + equation.oper + equation.b + "=" + equation.c,
+                    num_oper: 1
+                };
             } else {
-                return equation.a + equation.oper + blank + "=" + equation.c;
+                return { 
+                    question: equation.a + equation.oper + blank + "=" + equation.c,
+                    answer: equation.a + equation.oper + "<u>" + equation.b + "</u>=" + equation.c,
+                    num_oper: 1
+                };
             }
 
         }
@@ -430,39 +456,61 @@ label {
             if(equation.paren_pos === 2) {
                 result_str += ")";
             }
-            return result_str + "=" + blank;
+            return {
+                question: result_str + "=" + blank,
+                answer: result_str + "=<u>" + equation.c + "</u>",
+                num_oper: 2
+            };
         }
 
         function generate_type_4(oper_array) {
             let equation = generate_2_oper(oper_array);
             let result_str = "";
+            let result_answer_str = "";
             let rand = Math.random();
             if(equation.paren_pos === 1) {
                 result_str += "(";
+                result_answer_str += "(";
             }
             let a = equation.a;
             let b = equation.b;
             let c = equation.c;
+            let answer_a = a;
+            let answer_b = b;
+            let answer_c = c;
             if(rand < 1/3) {
                 a = blank;
+                answer_a = "<u>" + answer_a + "</u>";
             } else if(rand < 2/3) {
                 b = blank;
+                answer_b = "<u>" + answer_b + "</u>";
             } else {
                 c = blank;
+                answer_c = "<u>" + answer_c + "</u>";
             }
             result_str += a + equation.oper1;
+            result_answer_str += answer_a + equation.oper1;
             if(equation.paren_pos === 2) {
                 result_str += "(";
+                result_answer_str += "(";
             }
             result_str += b;
+            result_answer_str += answer_b;
             if(equation.paren_pos === 1) {
                 result_str += ")";
+                result_answer_str += ")";
             }
             result_str += equation.oper2 + c;
+            result_answer_str += equation.oper2 + answer_c;
             if(equation.paren_pos === 2) {
                 result_str += ")";
+                result_answer_str += ")";
             }
-            return result_str + "=" + equation.d;
+            return {
+                question: result_str + "=" + equation.d,
+                answer: result_answer_str + "=" + equation.d,
+                num_oper: 2
+            };
         }
 
         function onchange_times_range() {
@@ -607,17 +655,30 @@ label {
 <div class="result" id="result" style="visibility: hidden">
     <div id="question-sheet" class="question-sheet">
         <h1 class="result-title">数学运算练习题</h1>
+        <div style="text-align: left;margin-bottom: 20px">
+            <span>班级：____________</span>
+            <span style="margin-left:20px">姓名：____________</span>
+            <span style="margin-left:20px">学号：____________</span>
+        </div>
         <div style="text-align:right;margin-bottom: 20px">
             <span>题目数：</span>
             <label id="num_questions"> </label>
             <span>题</span>
+            <span style="margin-left: 20px">运算符：</span>
+            <label id="num_operators"></label>
+            <span>个</span>
             <span style="margin-left:20px">日期：______年____月____日</span>
             <span style="margin-left:20px">用时：________</span>
             <span style="margin-left:20px">得分：________</span>
         </div>
         <div id="result_text" class="result-sheet">orignal text</div>
     </div>
+    <div id="answer-sheet" class="question-sheet" style="visibility: hidden; display: none">
+        <h1 class="result-title">数学运算练习题(答案)</h1>
+        <div id="answer_text" class="result-sheet">orignal answer text</div>
+    </div>
     <button id="btn_print" class="ui secondary button" onclick="printDiv('question-sheet')">打印</button>
+    <button id="btn_print_answer" class="ui secondary button" onclick="printDiv('answer-sheet')">打印答案</button>
 </div>
 </body>
 </html>
